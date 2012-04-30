@@ -18,12 +18,19 @@ body {font-family: Arial, "MS Trebuchet", sans-serif;margin:0;background-color: 
 img {border-width:0;}
 .bg {position:absolute;height:100%;width:50%;}
 #bg-right {left:50%;background-color: #888;}
-#content {position:fixed;top:30;left:0;width:100%;height:100%;}
+#content {position:fixed;top:30px;left:0;width:100%;height:100%;}
 #left {text-align:right;float:left;width:48%;}
+#right {text-align:left;float:right;width:48%;}
+#right h1 {color:#ddd;}
 
 h1.title {color: #365f91;}
 ul.social {list-style:none;}
 ul.social li {display: inline;}
+
+ul.projects {list-style:none;padding-left:0;}
+ul.projects li {padding-bottom:4px;}
+ul.projects a {text-decoration:none;font-size:17px;font-weight:bold;color:#eee;}
+ul.projects a:hover {color: #DDD;}
 </style>
 </head>
 <body>
@@ -38,6 +45,13 @@ ul.social li {display: inline;}
     	<li><a href='http://github.com/oregu' title='GitHub'><img src='github.png' alt='GitHub'></a></li>
     	<li><a href='http://www.linkedin.com/in/oregu' title='LinkedIn'><img src='linkedin.png' alt='LinkedIn'></a></li>
       <li><a href='http://twitter.com/oregu_desu' title='Twitter'><img src='twitter.png' alt='Twitter'></a></li>
+    </ul>
+  </div>
+  <div id='right'>
+    <h1>Projects</h1>
+    <ul class='projects'>
+      <li><a href='http://www.pipyapp.com/' title='Ultimate Productivity Tool for Windows'>Pipy App</a></li>
+      <li><a href='http://github.com/Oregu/Pakkuman' title='Pacman game in Haskell'>Pakkuman</a></li>
     </ul>
   </div>
 </div>
