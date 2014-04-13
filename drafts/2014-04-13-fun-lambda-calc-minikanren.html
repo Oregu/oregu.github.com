@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="icon" href="../images/favicon.png" type="image/png" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>λ_.Fun with Lambda calculus Interpreters in miniKanren</title>
+    <link rel="stylesheet" type="text/css" href="../css/default.css" />
+  </head>
+  <body>
+    <div id="header">
+      <div id="logo">
+        <a href="../">Oleg Prophet</a>
+      </div>
+      <div id="navigation">
+        <a href="../">Index</a>
+        <a href="../posts.html">Posts</a>
+        <a href="../stuff.html">Stuff</a>
+      </div>
+    </div>
+
+    <div id="content">
+      <h1>Fun with Lambda calculus Interpreters in miniKanren</h1>
+      <div class="info">
+  Posted on April 13, 2014
+  
+    by Oleg Prophet
+  
+</div>
+
+<p>A year back I came in front of Dan Friedman and Will Byrd presentation called <a href="http://2013.flatmap.no/danwill.html">Fun with Relational Interpreters in miniKanren</a>. Which stroke me momentally. They presented a technique which allows you to generate infinite amount of quines. And not just that, but twines, thrines and other automatically generated programs with properties you want them to have. Why? How is that? What type of magic is this? And you don’t have to use special language for that. It’s right in your host language: in Racket as miniKanren or in Clojure as core.logic.</p>
+<h2 id="quines-generator">Quines generator</h2>
+<p>Being a clojure programmer I wanted to undertand how all this works. So I started translating original <a href="https://github.com/webyrd/quines">quines generator</a> to Clojure. You can find result in my <a href="https://github.com/Oregu/clj-quines">clojure quines</a> repo. That was pretty painful. I didn’t new anything of Racket, especially commas for symbol substitution and <code>define-syntax</code> stuff.</p>
+<p>So, after translating quines generator I wanted to proceed. I wanted to generate things and next interesting puzzle I found for miniKanren is lambda calculus/combinatory logic terms generation. At the time I was reading wonderful <a href="http://www.cse.chalmers.se/research/group/logic/TypesSS05/Extra/geuvers.pdf">Introduction to Lambda Calculus</a>. And there was an exercise: write a combinator such that <code>Fx=F</code>. Which is an interesting task on it’s own. But with miniKanren… this can be really adventurous.</p>
+<h2 id="lambda-culculus-interpreter">Lambda culculus interpreter</h2>
+<p>So I started writing lambda culculus interpreter which is able to run backwards producing terms. First attempt was to simply adapt <a href="https://github.com/webyrd">Will</a>’s interpreter to work with Lambda-Calculus. If you only new how I was wrong… This attempt deserves it’s <a href="https://github.com/Oregu/untyped/tree/naive">branch</a> on Github. That’s the hard way I knew about capture-avoiding substitutions. And only after that I realized what <a href="https://github.com/webyrd/alphaKanren">alphaKanren</a> is really for.</p>
+<h2 id="church-numerals">Church numerals</h2>
+<p>[Describing successor and summator.]</p>
+<h2 id="running-backwards">Running backwards</h2>
+<p>[Subtracting with sucessor and summator.]</p>
+<h2 id="recursion">Recursion</h2>
+<p>[Generating Y.]</p>
+<h2 id="where-it-all-started-a-greedy-function">Where it all started: a greedy function</h2>
+<p>[K infinity.]</p>
+<h2 id="bibliography">Bibliography</h2>
+<ul>
+<li><a href="http://www.cse.chalmers.se/research/group/logic/TypesSS05/Extra/geuvers.pdf">Introduction to Lambda calculus</a>.</li>
+<li><a href="http://gradworks.umi.com/3380156.pdf">Relational Programming in miniKanren: Techniques, Applications, and Implementations</a>.</li>
+</ul>
+
+    </div>
+    <div id="footer">
+      Proudly <a href="http://jaspervdj.be/hakyll" target="_blank">Hakyll</a>
+    </div>
+  </body>
+</html>
