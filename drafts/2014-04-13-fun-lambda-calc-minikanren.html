@@ -5,6 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>λ_.Fun with Lambda calculus Interpreters in miniKanren</title>
     <link rel="stylesheet" type="text/css" href="../css/default.css" />
+    <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
   </head>
   <body>
     <div id="header">
@@ -27,6 +28,7 @@
   
 </div>
 
+<p><em>Work in progress</em></p>
 <p>A year back I came in front of Dan Friedman and Will Byrd presentation called <a href="http://2013.flatmap.no/danwill.html">Fun with Relational Interpreters in miniKanren</a>. Which stroke me momentally. They presented a technique which allows you to generate infinite amount of quines. And not just that, but twines, thrines and other automatically generated programs with properties you want them to have. Why? How is that? What type of magic is this? And you don’t have to use special language for that. It’s right in your host language: in Racket as miniKanren or in Clojure as core.logic.</p>
 <h2 id="quines-generator">Quines generator</h2>
 <p>Being a clojure programmer I wanted to undertand how all this works. So I started translating original <a href="https://github.com/webyrd/quines">quines generator</a> to Clojure. You can find result in my <a href="https://github.com/Oregu/clj-quines">clojure quines</a> repo. That was pretty painful. I didn’t new anything of Racket, especially commas for symbol substitution and <code>define-syntax</code> stuff.</p>
@@ -34,17 +36,57 @@
 <h2 id="lambda-culculus-interpreter">Lambda culculus interpreter</h2>
 <p>So I started writing lambda culculus interpreter which is able to run backwards producing terms. First attempt was to simply adapt <a href="https://github.com/webyrd">Will</a>’s interpreter to work with Lambda-Calculus. If you only new how I was wrong… This attempt deserves it’s <a href="https://github.com/Oregu/untyped/tree/naive">branch</a> on Github. That’s the hard way I knew about capture-avoiding substitutions. And only after that I realized what <a href="https://github.com/webyrd/alphaKanren">alphaKanren</a> is really for.</p>
 <h2 id="church-numerals">Church numerals</h2>
-<p>[Describing successor and summator.]</p>
+<p>Let’s see what we can do with the interpreter. First things you get to know in λ-calculus are Church numerals. Let’s define some numerals and do fun stuff with them:</p>
+<pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">use</span> 'untyped.core)
+
+(<span class="kw">defn</span><span class="fu"> ch-succ </span>[n f x]
+  (lam n (lam f (lam x (app f (app (app n f) x))))))
+
+(<span class="kw">defn</span><span class="fu"> ch3 </span>[f x]
+  (lam f (lam x (app f (app f (app f x))))))
+
+(<span class="kw">first</span> (run* [q] (nom/fresh [n f x]
+  (eval-expo
+    (app (ch-succ n f x) (ch3 f x))
+    q))))              <span class="co">;; What is the result applying successor to three?</span>
+
+=&gt; (<span class="kw">fn</span> [a_0] (<span class="kw">fn</span> [a_1] (a_0 (a_0 (a_0 (a_0 a_1))))))</code></pre>
+<p>In this example we defined Church successor as <code>λnfx.f(nfx)</code> and number three <code>λfx.f(f(fx))</code>. And evaluating application gives us a term which can be translated back as <code>λfx.f(f(f(fx)))</code> which is a Church four indeed. Here <code>a_0</code> and <code>a_1</code> are distinct noms.</p>
 <h2 id="running-backwards">Running backwards</h2>
-<p>[Subtracting with sucessor and summator.]</p>
+<p>Ok, that was straitforward, let’s try something trickier. It’s easy to obtain successor for Church numeral, but not predecessor. There are couple of predecessor functions defined in terms of predicates or even pairs, involving complex reasoning… But we won’t go that path, let’s decrease using increaser:</p>
+<pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">first</span> (run* [q] (nom/fresh [n f x]
+  (eval-expo
+    (app (ch-succ n f x) q) <span class="co">;; To what λ-term should I apply successor</span>
+    (ch3 f x)))))           <span class="co">;; to obtain number three?</span>
+
+=&gt; (<span class="kw">fn</span> [a_0] (<span class="kw">fn</span> [a_1] (a_0 (a_0 a_1))))</code></pre>
+<p>Doesn’t that answer remind you of something? Maybe it looks like term <code>λfx.f(fx)</code>? This is a Church two. Exactly!</p>
+<p>You can find other experiments with Church numerals in <a href="https://github.com/Oregu/untyped/blob/master/src/untyped/church.clj">this file</a> on Github. For example we can ask miniKanren to produce successor term and it will do so in 41 seconds! Even though I can’t generate summator function without heavy hinting! That’s a problem I’m working on.</p>
+<h2 id="combinatory-logic">Combinatory logic</h2>
+<p>Of course we can do Combinatory logic. Let’s try. SKI combinator calculus is indeed Turing complete, but I heard oneday that even S and K are enough to fully represent λ-calculus. Let’s try:</p>
+<pre class="sourceCode clojure"><code class="sourceCode clojure">(run <span class="dv">1</span> [q] (nom/fresh [x y xx yy a b c]
+  (eval-expo
+    (app (app (app (S a b c) (K x y)) (K xx yy)) q) <span class="co">;; SKKq ?= q</span>
+    q)))
+
+=&gt; (_0)</code></pre>
+<p>We asked it whether applying <code>SKKq</code> will result in <code>q</code>. And indeed it answered positive. Which means that <code>S</code> and <code>K</code> combinators are enough.</p>
+<p>Now back to fun again: how does quine looks like in λ-calculus?</p>
+<pre class="sourceCode clojure"><code class="sourceCode clojure">(run <span class="dv">2</span> [q] (eval-expo q q))
+
+=&gt; ((<span class="kw">fn</span> [a_0] _1)
+    (((<span class="kw">fn</span> [a_0] a_0) (<span class="kw">fn</span> [a_1] (a_1 a_1)))
+     ((<span class="kw">fn</span> [a_0] a_0) (<span class="kw">fn</span> [a_1] (a_1 a_1)))))</code></pre>
+<p>We asked interpreter to produce expression which on evaluation will produce itself. We asked it to produce two answers. First one is a lambda abstraction which is a normal form and indeed will be evaluated to itself (I wonder whether it is a correct behavior). And the second one, what is this? Big omega is a second answer: <code>Ω=(λx.xx)(λx.xx)</code>. But I should admit, that it’s not in normal form. It looks more like <code>(Iλx.xx)(Iλx.xx)</code>, but after normalizing terms in brackets we have our <code>Ω</code> which is still cool.</p>
 <h2 id="recursion">Recursion</h2>
 <p>[Generating Y.]</p>
 <h2 id="where-it-all-started-a-greedy-function">Where it all started: a greedy function</h2>
 <p>[K infinity.]</p>
-<h2 id="bibliography">Bibliography</h2>
+<h2 id="resources">Resources</h2>
 <ul>
 <li><a href="http://www.cse.chalmers.se/research/group/logic/TypesSS05/Extra/geuvers.pdf">Introduction to Lambda calculus</a>.</li>
 <li><a href="http://gradworks.umi.com/3380156.pdf">Relational Programming in miniKanren: Techniques, Applications, and Implementations</a>.</li>
+<li><a href="http://2013.flatmap.no/danwill.html">Fun with Relational Interpreters in miniKanren</a>.</li>
 </ul>
 
     </div>
