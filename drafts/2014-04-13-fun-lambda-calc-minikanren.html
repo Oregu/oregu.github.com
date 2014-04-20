@@ -47,9 +47,10 @@
   (lam f (lam x (app f (app f (app f x))))))
 
 (<span class="kw">first</span> (run* [q] (nom/fresh [n f x]
+  <span class="co">;; What is the result applying successor to three?</span>
   (eval-expo
     (app (ch-succ n f x) (ch3 f x))
-    q))))              <span class="co">;; What is the result applying successor to three?</span>
+    q))))
 
 =&gt; (<span class="kw">fn</span> [a_0] (<span class="kw">fn</span> [a_1] (a_0 (a_0 (a_0 (a_0 a_1))))))</code></pre>
 <p>In this example we defined Church successor as <code>λnfx.f(nfx)</code> and number three <code>λfx.f(f(fx))</code>. And evaluating application gives us a term which can be translated back as <code>λfx.f(f(f(fx)))</code> which is a Church four indeed. Here <code>a_0</code> and <code>a_1</code> are distinct noms.</p>
@@ -67,8 +68,8 @@
 <p>Of course we can do Combinatory logic. Let’s try. SKI combinator calculus is indeed Turing complete, but I heard oneday that even S and K are enough to fully represent λ-calculus. Let’s try:</p>
 <pre class="sourceCode clojure"><code class="sourceCode clojure">(run <span class="dv">1</span> [q] (nom/fresh [x y xx yy a b c]
   (eval-expo
-    (app (app (app (S a b c) (K x y)) (K xx yy)) q) <span class="co">;; SKKq ?= q</span>
-    q)))
+    (app (app (app (S a b c) (K x y)) (K xx yy)) q)
+    q)))      <span class="co">;; SKKq ?= q</span>
 
 =&gt; (_0)</code></pre>
 <p>We asked it whether applying <code>SKKq</code> will result in <code>q</code>. And indeed it answered positive. Which means that <code>S</code> and <code>K</code> combinators are enough.</p>
