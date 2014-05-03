@@ -36,6 +36,7 @@
 <p>So, after translating quines generator I wanted to proceed. I wanted to generate things and next interesting puzzle I found for miniKanren is lambda calculus/combinatory logic terms generation. At the time I was reading wonderful <a href="http://www.cse.chalmers.se/research/group/logic/TypesSS05/Extra/geuvers.pdf">Introduction to Lambda Calculus</a>. And there was an exercise: write a combinator such that <code>Fx=F</code>. Which is an interesting task on it’s own. But with miniKanren… this can be really adventurous.</p>
 <h2 id="lambda-culculus-interpreter">Lambda culculus interpreter</h2>
 <p>So I started writing lambda culculus interpreter which is able to run backwards producing terms. First attempt was to simply adapt <a href="https://github.com/webyrd">Will</a>’s interpreter to work with Lambda-Calculus. If you only new how I was wrong… This attempt deserves it’s <a href="https://github.com/Oregu/untyped/tree/naive">branch</a> on Github. That’s the hard way I knew about capture-avoiding substitutions. And only after that I realized what <a href="https://github.com/webyrd/alphaKanren">alphaKanren</a> is really for.</p>
+<p>To implement interpreter I adapted Will’s relation interpreter used for quines generation and added his (slightly modified) capture-avoiding substo function (adapted from <a href="http://homepages.inf.ed.ac.uk/jcheney/programs/aprolog/">alphaProlog</a>). You can find <code>eval-expo</code> function under <a href="https://github.com/Oregu/untyped/blob/master/src/untyped/core.clj">untyped.core</a> namespace.</p>
 <h2 id="church-numerals">Church numerals</h2>
 <p>Let’s see what we can do with the interpreter. First things you get to know in λ-calculus are Church numerals. Let’s define some numerals and do fun stuff with them:</p>
 <pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">use</span> 'untyped.core)
@@ -80,10 +81,42 @@
     (((<span class="kw">fn</span> [a_0] a_0) (<span class="kw">fn</span> [a_1] (a_1 a_1)))
      ((<span class="kw">fn</span> [a_0] a_0) (<span class="kw">fn</span> [a_1] (a_1 a_1)))))</code></pre>
 <p>We asked interpreter to produce expression which on evaluation will produce itself. We asked it to produce two answers. First one is a lambda abstraction which is a normal form and indeed will be evaluated to itself (I wonder whether it is a correct behavior). And the second one, what is this? Big omega is a second answer: <code>Ω=(λx.xx)(λx.xx)</code>. But I should admit, that it’s not in normal form. It looks more like <code>(Iλx.xx)(Iλx.xx)</code>, but after normalizing terms in brackets we have our <code>Ω</code> which is still cool.</p>
+<h2 id="the-point-of-it-all-an-eater-function">The point of it all: An Eater Function</h2>
+<p>My initial idea was to produce such function, that will eat it’s arguments one by one and never satisfies. In “Introduction to Lambda Calculus” it’s called eater function. Another names I found are K<sub>∞</sub> or K<sub>*</sub> combinators and even <a href="http://en.wikipedia.org/wiki/To_Mock_a_Mockingbird">A Hopelessly Egocentric Bird</a> <code>B</code>. (I tried to find where I saw K<sub>∞</sub> and K<sub>*</sub> names but couldn’t, so if you now where are they came from, <script type="text/javascript">
+<!--
+h='&#x67;&#x6d;&#x61;&#x69;&#108;&#46;&#x63;&#x6f;&#x6d;';a='&#64;';n='&#116;&#104;&#x65;&#104;&#x61;&#x6b;&#x75;&#116;&#x61;&#x6b;&#x75;';e=n+a+h;
+document.write('<a h'+'ref'+'="ma'+'ilto'+':'+e+'">'+'let me know'+'<\/'+'a'+'>');
+// -->
+</script><noscript>let me know (thehakutaku at gmail dot com)</noscript>.)</p>
+<p>An eater function is a term defined by following expression: <code>Ex=E</code>. It’s easy definable through fixed point combinator as K combinator applied to Y: <code>YK ≡ K(YK) ≡ (λxk.x)(YK) ≡ λk.(YK)</code></p>
+<p>Now let’s ask miniKanren to produce an eater with a simple equation <code>eval (q x) = q</code>:</p>
+<pre class="sourceCode clojure"><code class="sourceCode clojure">(run <span class="dv">1</span> [q] (nom/fresh [x]
+  (eval-expo (app q x) q)))
+
+=&gt; ((((<span class="kw">fn</span> [a_0] a_0) (<span class="kw">fn</span> [a_1] (<span class="kw">fn</span> [a_2] a_1)))
+     ((<span class="kw">fn</span> [a_3] (a_3 _4)) (_5 (<span class="kw">fn</span> [a_6] (<span class="kw">fn</span> [a_7] a_6)))))
+  <span class="kw">:-</span>
+  (!= (((<span class="kw">fn</span> [a_3] (a_3 _4)) (_5 (<span class="kw">fn</span> [a_6] (<span class="kw">fn</span> [a_7] a_6)))) a_8))
+  (!= (_8 a_9))
+  not-fn?
+  nom?
+  (!= ((<span class="kw">fn</span> [a_0] a_0) a_8))
+  a_2<span class="co">#_</span>4
+  a_2<span class="co">#_</span>5
+  (!= ((<span class="kw">fn</span> [a_0] a_0) <span class="kw">fn</span>))
+  a_2#clojure.lang.LazySeq<span class="kw">@c6fe0969</span></code></pre>
+<p>It spits a lot of stuff, where function is before <code>:-</code> sign. Let’s translate: <code>((λi.i)(λxk.x))((λa.(a _4))(_5 λyz.y))</code> where <em>4 and </em>5 are some terms (which I don’t know where came from). Well, it looks like a nonsense.</p>
+<p>Now some mistery part: right before writing this part of post I switched from Ubuntu to Mint, so I had to reinstall lein and all the dependencies. And now it returns some bullshit instead of the one I got before! While I’m investigating on it, let me show what it returned me:</p>
+<pre class="sourceCode clojure"><code class="sourceCode clojure">(((<span class="kw">fn</span> [a_0] a_0) (<span class="kw">fn</span> [a_1] (<span class="kw">fn</span> [a_2] (a_1 a_1))))
+ (_5 (<span class="kw">fn</span> [a_3] (a_4 (a_3 a_3)))))</code></pre>
+<p>Yes, it had this “I don’t know where it came from” <code>_5</code> term. But if you just throw it out, you will get nice looking eater function! Check this out:</p>
+<p><code>((λi.i)(λab.aa))(λxy.xx) ≡ (λab.aa)(λxy.xx) ≡ λb.(λxy.xx)(λxy.xx)</code></p>
+<p>So here’s optimised answer: <code>λb.(λxy.xx)(λxy.xx)</code>. I claim that I found it with the magic of miniKanren, but I’m not able to repeat it for you unfortunately!</p>
+<p>The term <code>λab.aa</code> is <a href="http://www.angelfire.com/tx4/cus/combinator/birds.html">called</a> Crossed Konstant Mocker, so if you call out Crossed Konstant Bird to Mocking bird you will get A Hopelessly Egocentric Bird back! Pure joy.</p>
 <h2 id="recursion">Recursion</h2>
-<p>[Generating Y.]</p>
-<h2 id="where-it-all-started-a-greedy-function">Where it all started: a greedy function</h2>
-<p>[K infinity.]</p>
+<p>If you’ve read this far, you must be wondering whether can we generate fixed-point combinator with relational interpreter. Answer is yes, we can. But I can’t. I’ll give you a link to <a href="https://github.com/webyrd/">Will’s</a> <a href="https://github.com/webyrd/alphaKanren/blob/master/tests.scm#L980">alphaKanren repo</a> where he is able to generate <code>Y</code> within 7 minutes with simple hint. His test 68 produces <code>Y</code> with single step evaluator borrowed from <a href="http://homepages.inf.ed.ac.uk/jcheney/programs/aprolog/">alphaProlog</a>.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>[Appearing identities][Recursion terms] [Terms functions]</p>
 <h2 id="resources">Resources</h2>
 <ul>
 <li><a href="http://www.cse.chalmers.se/research/group/logic/TypesSS05/Extra/geuvers.pdf">Introduction to Lambda calculus</a>.</li>
